@@ -3,7 +3,7 @@ name: Build and Deploy to AWS ECR
 on:
   push:
     branches:
-      - main  # Trigger when code is pushed to main branch
+      - main
 
 jobs:
   build-and-push:
@@ -24,13 +24,12 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
 
+      - name: Set image URI
+        id: vars
+        run: echo "IMAGE_URI=980921717654.dkr.ecr.us-east-1.amazonaws.com/patient:latest" >> $GITHUB_ENV
+
       - name: Build Docker image
-        run: |
-          IMAGE_URI="980921717654.dkr.ecr.us-east-1.amazonaws.com/patient:latest"
-          docker build -t $IMAGE_URI .
+        run: docker build -t $IMAGE_URI .
 
       - name: Push Docker image to ECR
-        run: |
-          IMAGE_URI="980921717654.dkr.ecr.us-east-1.amazonaws.com/patient:latest"
-          docker push $IMAGE_URI
-
+        run: docker push $IMAGE_URI
