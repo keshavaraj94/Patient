@@ -1,16 +1,23 @@
-name: Build and Deploy to AWS ECR
+name: Build, Push Docker & Deploy with Terraform
 
 on:
   push:
     branches:
       - main
 
+env:
+  AWS_REGION: us-east-1
+  ECR_REGISTRY: 980921717654.dkr.ecr.us-east-1.amazonaws.com
+  ECR_REPOSITORY: patient
+  IMAGE_TAG: latest
+  TF_VAR_image_tag: latest
+
 jobs:
-  build-and-push:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout source code
+      - name: Checkout repository
         uses: actions/checkout@v3
 
       - name: Configure AWS credentials
@@ -18,18 +25,31 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          aws-region: ${{ env.AWS_REGION }}
 
       - name: Login to Amazon ECR
-        id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
 
-      - name: Set image URI
-        id: vars
-        run: echo "IMAGE_URI=980921717654.dkr.ecr.us-east-1.amazonaws.com/patient:latest" >> $GITHUB_ENV
+      - name: Build and Push Docker image
+        run: |
+          IMAGE_URI=${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
+          echo "IMAGE_URI=$IMAGE_URI" >> $GITHUB_ENV
+          docker build -t $IMAGE_URI .
+          docker push $IMAGE_URI
 
-      - name: Build Docker image
-        run: docker build -t $IMAGE_URI .
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.6.0
 
-      - name: Push Docker image to ECR
-        run: docker push $IMAGE_URI
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Terraform Plan
+        run: terraform plan -var="image_tag=${{ env.IMAGE_TAG }}"
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve -var="image_tag=${{ env.IMAGE_TAG }}"
