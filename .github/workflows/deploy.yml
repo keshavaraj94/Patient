@@ -53,5 +53,6 @@ jobs:
 
       - name: Terraform Apply
         run: terraform apply -auto-approve -var="image_tag=${{ env.IMAGE_TAG }}"
-       - name: Terraform destroy
+        
+      - name: Terraform destroy
         run: terraform destroy -auto-approve -var="image_tag=${{ env.IMAGE_TAG }}"
