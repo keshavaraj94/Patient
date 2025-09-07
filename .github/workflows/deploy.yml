@@ -26,11 +26,11 @@ jobs:
 
       - name: Build Docker image
         run: |
-          IMAGE_URI="980921717654.dkr.ecr.us-east-1.amazonaws.com/patient"
+          IMAGE_URI="980921717654.dkr.ecr.us-east-1.amazonaws.com/patient:latest"
           docker build -t $IMAGE_URI .
 
       - name: Push Docker image to ECR
         run: |
-          IMAGE_URI="980921717654.dkr.ecr.us-east-1.amazonaws.com/patient"
+          IMAGE_URI="980921717654.dkr.ecr.us-east-1.amazonaws.com/patient:latest"
           docker push $IMAGE_URI
 
