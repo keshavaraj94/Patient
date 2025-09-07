@@ -3,8 +3,7 @@ terraform {
     bucket         = "my-ecs-terraform-state-bucket"   # <-- Replace with your S3 bucket name
     key            = "ecs/terraform.tfstate"           # Path inside the bucket
     region         = "us-east-1"                       # Region of the bucket
-    dynamodb_table = "ecs-terraform-locks"             # <-- Replace with your DynamoDB table for state locking
-    encrypt        = true
+    encrypt        = false
   }
 }
 
