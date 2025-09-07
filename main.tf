@@ -83,14 +83,9 @@ resource "aws_ecs_cluster" "main" {
 #----------------------------
 # 4. IAM Roles for ECS Task
 #----------------------------
-resource "random_string" "ecs_role_suffix" {
-  length  = 6
-  special = false
-  upper   = false
-}
-
 resource "aws_iam_role" "ecs_task_exec_role" {
-  name = "ecs-task-exec-role-${random_string.ecs_role_suffix.result}"
+  # Using name_prefix to avoid "EntityAlreadyExists" errors
+  name_prefix = "ecs-task-exec-role-"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
