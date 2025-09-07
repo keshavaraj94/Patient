@@ -3,6 +3,15 @@ provider "aws" {
 }
 
 #----------------------------
+# Variable for image tag
+#----------------------------
+variable "image_tag" {
+  description = "Docker image tag for ECS task"
+  type        = string
+  default     = "latest"
+}
+
+#----------------------------
 # 1. Create VPC and Subnets
 #----------------------------
 resource "aws_vpc" "main" {
@@ -108,7 +117,7 @@ resource "aws_ecs_task_definition" "app" {
   container_definitions = jsonencode([
     {
       name      = "patient"
-      image     = "980921717654.dkr.ecr.us-east-1.amazonaws.com/patient:latest"
+      image     = "980921717654.dkr.ecr.us-east-1.amazonaws.com/patient:${var.image_tag}"
       essential = true
       portMappings = [
         {
