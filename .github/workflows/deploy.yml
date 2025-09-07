@@ -1,9 +1,20 @@
-name: Build, Push Docker & Deploy with Terraform
+name: Build, Push Docker & Deploy/Destroy with Terraform
 
 on:
   push:
     branches:
       - main
+
+  workflow_dispatch:
+    inputs:
+      action:
+        description: "Choose action: deploy or destroy"
+        required: true
+        default: deploy
+        type: choice
+        options:
+          - deploy
+          - destroy
 
 env:
   AWS_REGION: us-east-1
@@ -14,7 +25,9 @@ env:
 
 jobs:
   build-and-deploy:
+    if: github.event_name == 'push' || github.event.inputs.action == 'deploy'
     runs-on: ubuntu-latest
+    name: Build & Deploy
 
     steps:
       - name: Checkout repository
@@ -45,14 +58,35 @@ jobs:
       - name: Terraform Init
         run: terraform init
 
-      - name: Terraform Validate
-        run: terraform validate
-
       - name: Terraform Plan
         run: terraform plan -var="image_tag=${{ env.IMAGE_TAG }}"
 
- #     - name: Terraform Apply
-  #      run: terraform apply -auto-approve -var="image_tag=${{ env.IMAGE_TAG }}"
-        
-      - name: Terraform destroy
+      - name: Terraform Apply
+        run: terraform apply -auto-approve -var="image_tag=${{ env.IMAGE_TAG }}"
+
+  destroy:
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'destroy'
+    runs-on: ubuntu-latest
+    name: Terraform Destroy
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.6.0
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Destroy
         run: terraform destroy -auto-approve -var="image_tag=${{ env.IMAGE_TAG }}"
